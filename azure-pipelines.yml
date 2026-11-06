@@ -146,7 +146,41 @@ stages:
             displayName: 'Descarga CLI, Login y Despliegue Docker'
 
   # ==========================================
-  # STAGE 4: NOTIFICACIONES (NOTIFICATIONS)
+  # STAGE 4: PRUEBAS DE HUMO (SMOKE TESTS)
+  # ==========================================
+  - stage: SmokeTests
+    displayName: 'Pruebas de Humo'
+    dependsOn: CD
+    condition: succeeded()
+    jobs:
+      - job: health_check
+        displayName: 'Validar Servicio Desplegado'
+        steps:
+          - bash: |
+              set -euo pipefail
+
+              echo "=== 1. Verificando disponibilidad ==="
+              echo "Endpoint: $HEALTH_URL"
+
+              echo "=== 2. Ejecutando prueba HTTP ==="
+              curl --fail --silent --show-error \
+                --location \
+                --retry 3 \
+                --retry-delay 5 \
+                --retry-all-errors \
+                --connect-timeout 10 \
+                --max-time 30 \
+                "$HEALTH_URL"
+
+              echo ""
+              echo "=== 3. Validación exitosa ==="
+              echo "El servicio responde correctamente."
+            displayName: 'Comprobar salud de la aplicación'
+            env:
+              HEALTH_URL: $(APP_HEALTH_URL)
+
+  # ==========================================
+  # STAGE 5: NOTIFICACIONES (NOTIFICATIONS)
   # ==========================================
   - stage: Notifications
     displayName: 'Notificar'
