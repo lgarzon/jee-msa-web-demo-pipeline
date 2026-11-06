@@ -184,7 +184,7 @@ stages:
   # ==========================================
   - stage: Notifications
     displayName: 'Notificar'
-    dependsOn: [CI, Approval, CD]
+    dependsOn: [CI, Approval, CD, SmokeTests]
     condition: always()
     jobs:
       - job: send_status_email
